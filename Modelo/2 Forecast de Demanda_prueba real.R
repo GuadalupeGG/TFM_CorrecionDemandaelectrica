@@ -1,13 +1,7 @@
-## -------------------------------------------------------------------------
-## SCRIPT: Clustering de clientes RFM.R
-## CURSO: Master en Data Science
-## PROFESOR: Antonio Pita
-## Paquetes Necesarios: forecast
-## -------------------------------------------------------------------------
 
-## -------------------------------------------------------------------------
+##### Cargamos librerias #####
 
-##### 1. Bloque de inicializacion de librerias y establecimiento de directorio #####
+# Primero de todo, si es necesario instalamos libreria y la cargamos
 
 if (!require("forecast")){
   install.packages("forecast") 
@@ -16,20 +10,21 @@ if (!require("forecast")){
 
 ## -------------------------------------------------------------------------
 
-##### 2. Bloque de establecimiento de directorio #####
+##### Establecemos directorio de trabajo #####
 
-setwd("D:/Documentos, Trabajos y Demás/Formación/Kschool/201711 Clase V Master Data Science/6 Casos de Exito de Negocio")
+setwd("~/TFM/TFM_CorrecionDemandaelectric")
 
 ## -------------------------------------------------------------------------
 
-##### 3. Bloque de carga de datos #####
+##### Cargamos los datos #####
 
+# Cargo el data frame resultado del notebook de python
 
+Medidas=read.csv2("./df_group_sum.csv",stringsAsFactors = FALSE, sep = ',')
 
-Medidas=read.csv2("./df_2018.csv",stringsAsFactors = FALSE, sep = ',')
 ## -------------------------------------------------------------------------
 
-##### 4. Bloque de revisión básica del dataset #####
+##### Hacemos una revisión de los datos del data frame #####
 
 
 str(Medidas)
@@ -39,7 +34,7 @@ tail(Medidas)
 
 ## -------------------------------------------------------------------------
 
-##### 5. Bloque de formateo de variables #####
+##### Formateamos las variables #####
 
 
 Medidas$Zona=as.factor(Medidas$Zona)
@@ -47,12 +42,16 @@ Medidas$Tarifa=as.factor(Medidas$Tarifa)
 
 Medidas$Active=as.numeric(Medidas$Active)
 
-lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "Spanish_Spain.1252") # para poner las fechas en buen formato
-
+# para asegurarnos que las fechas tienen un formato correcto
+lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "Spanish_Spain.1252") 
 
 Medidas$Fecha=as.Date(Medidas$Fecha)
 
-Sys.setlocale("LC_TIME", lct) # para poner las fechas en el mismo formato todos
+# para poner todas las fechas en el mismo formato
+
+Sys.setlocale("LC_TIME", lct) 
+
+# Volvemos a revisar los datos
 
 str(Medidas)
 head(Medidas)
@@ -60,9 +59,11 @@ summary(Medidas)
 
 ## -------------------------------------------------------------------------
 
-##### 6. Bloque de selección de producto #####
+##### Seleccionamos los datos a pasar a los modelos #####
 
-Medidas_Centro=Medidas[Medidas$Zona=="Centro",]
+Medidas_Centro=Medidas[Medidas$Zona=="Centro" & Medidas$Tarifa=='2A',]
+
+# Revisamos los datos de este filtro de datos
 
 str(Medidas_Centro)
 head(Medidas_Centro)
@@ -75,9 +76,9 @@ plot(Medidas_Centro$Fecha,Medidas_Centro$Active, type="l")
 
 ## -------------------------------------------------------------------------
 
-##### 7. Bloque de selección de fecha de analisis y periodo #####
+##### Seleccionamos las fechas para el analisis y el periodo #####
 
-FECHA_ANALISIS=as.Date("2018-08-01")
+FECHA_ANALISIS=as.Date("2018-07-31")
 PERIODO_PREVIO=140
 PERIODO_PRUEBA=31
 
@@ -92,11 +93,11 @@ plot(Medidas_Centro_NEW$Fecha,Medidas_Centro_NEW$Active, type="l")
 
 ##### 8. Bloque de formateo de serie #####
 
-Centro = ts(Medidas_Centro_HIS$Active,start=c(2018,01,01),frequency=7) # frequency, porque el patron de estacionalidad son días, 7 días de la semana
+Centro = ts(Medidas_Centro_HIS$Active,start=c(2018,01,01), end = c(2018,12,31),frequency=7) # frequency, porque el patron de estacionalidad son días, 7 días de la semana
 plot(Centro)
 print(Centro)
 
-Medidas_ts = ts(Medidas$Active, start = c(2018,01,01), frequency = 7)
+Medidas_ts = ts(Medidas$Active, start = c(2018,01,01), end = c(2018,12,31), frequency = 7)
 ## -------------------------------------------------------------------------
 
 ##### 9. Bloque de modelo Arima #####
