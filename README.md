@@ -2,7 +2,7 @@
 
 La idea inicial de este TFM era crear un modelo que corrigiese la demanda electrica en función de los cambios de temperaturas. 
 
-Pero debido a la dificultada que he tenido para conseguir los data set he ido modificando el trabajo en función de los datos de los que dispongo.
+Pero debido a la dificultad que he tenido para conseguir los data set he ido modificando el trabajo en función de los datos de los que dispongo.
 
 Por motimos de confidencialidad el data set original de medidas no lo puedo subir a la plataforma, y la unica información que puedo subir es la medida agregada por zona geografica, por tarifa y por fecha y hora. 
 
