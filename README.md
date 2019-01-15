@@ -40,3 +40,22 @@ Este notebook tiene algunos graficos donde podemos ver las relaciones entre vari
 
 En este notebook de R intento utilizar las herramientas de que dispongo para predecir la demanda electrica de las proximas 24 horas utilizando varios modelos para ver cual se adapta mejor a la realidad.
 
+# Detalle datos
+
+Los consumidores electricos en nuestro país se catalogan en función de su potencia contrata, según la potencia que cada consumidor contrata se le asigna una tarifa electrica u otra. 
+
+### CUPS
+
+Codigo universal de punto de suministro. Este es el codigo unico e invariable que tiene cada consumidor electrico. Un contrato de electricidad puede cambiar de titular pero no de CUPS. 
+
+### Tarifa electrica
+
+En el caso que nos aplica nos vamos centrar unicamente en las tarifas electricas de baja tensión, que son:
+
+# 2.0A: Potencia contratada inferior o igual a 10KWh
+# 2.1A: Potencia contratada entre 10KWh y 15KWh
+# 2.0DHA: Potencia contratada inferior o igual a 10KWh
+# 2.1DHA: Potencia contratada entre 10KWh y 15KWh
+
+En lo que a perfiles de consumo se refiere las tarifas 2.0A y 2.1A son similares, y la tarifa 2.0DHA y la tarifa 2.1DHA también. Las tarifas 2.0A y 2.1A se caracterizan por no tener discriminación horaria.
+
