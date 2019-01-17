@@ -66,6 +66,8 @@ summary(Medidas)
 
 ##### Seleccionamos los datos a pasar a los modelos #####
 
+#Aunque el fichero trae medida de cuatro puntos, vamos realizar el estudio del punto 3.
+
 Medidas_1=Medidas[Medidas$Cups=="Cups_3",]
 
 # Revisamos los datos de este filtro de datos
@@ -76,7 +78,7 @@ summary(Medidas_1)
 
 Medidas_1=Medidas_1[order(Medidas_1$datetime),]
 plot(Medidas_1$Active, type="l")
-plot(Medidas_1$datetime,Medidas_1$Active, type="l",)
+plot(Medidas_1$datetime,Medidas_1$Active, type="l")
 
 ## -------------------------------------------------------------------------
 
@@ -84,7 +86,7 @@ plot(Medidas_1$datetime,Medidas_1$Active, type="l",)
 
 FECHA_ANALISIS=as.Date("2018-11-15")
 PERIODO_PREVIO=140
-PERIODO_PRUEBA=1
+PERIODO_PRUEBA=7
 
 
 Medidas_1_HIS=Medidas_1[Medidas_1$datetime<=FECHA_ANALISIS & Medidas_1$datetime>FECHA_ANALISIS-PERIODO_PREVIO,]
@@ -98,7 +100,7 @@ plot(Medidas_1_NEW$datetime,Medidas_1_NEW$Active, type="l")
 ##### Formateo de Serie Temporal #####
 
 # le damos un patron de estacionalidad de 365 días
-Centro = ts(Medidas_1_HIS$Active,start=c(2017,07,01), frequency=7) 
+Centro = ts(Medidas_1_HIS$Active,start=c(2017,07,01), frequency=365) 
 
 # Vemos un resumen completo de la serie temporal donde el grafico ACF es la autocorrealción y el grafico PACF es el grafico de autocorrelación parcial
 tsdisplay(Centro)
@@ -113,7 +115,7 @@ plot(decompose(Centro))
 plot(Centro)
 print(Centro)
 
-Medidas_ts = ts(Medidas$Active, start = c(2017,07,01),  frequency = 7)
+Medidas_ts = ts(Medidas_1_HIS$Active, start = c(2017,07,01),  frequency = 365)
 
 ## -------------------------------------------------------------------------
 
@@ -125,7 +127,7 @@ Medidas_ts = ts(Medidas$Active, start = c(2017,07,01),  frequency = 7)
 help(auto.arima)
 
 model_arima=auto.arima(Centro,seasonal=TRUE,trace=TRUE,stepwise=FALSE) 
-plot(forecast(model_arima,h=100)) # muestrame los 24 siguientes datos
+plot(forecast(model_arima,h=24)) # muestrame los 24 siguientes datos
 
 # Calculamos los residuos de nuestro modelo
 checkresiduals(model_arima)
@@ -135,11 +137,11 @@ summary(model_arima)
 model_arima %>% forecast(h = 24) %>% autoplot()
 forecast(model_arima,h=24)
 
-Centro$Arima=forecast(model_arima,h=PERIODO_PRUEBA)$mean
+Medidas_1_NEW$Arima=forecast(model_arima,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 10. Bloque de modelo Media Movil #####
+##### MEDIDA MOVIL #####
 
 model_ma=ma(Medidas_ts,order=3)
 summary(model_ma)
@@ -150,7 +152,7 @@ Medidas_1_NEW$MA=forecast(model_ma,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 11. Bloque de modelo Holt-Winters #####
+##### HOLT-WINTERS #####
 
 model_hw=HoltWinters(Medidas_ts)
 summary(model_hw)
@@ -161,7 +163,7 @@ Medidas_1_NEW$HW=forecast(model_hw,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 12. Bloque de modelo lineal #####
+##### MODELO LINEAL #####
 
 model_tslm=tslm(Medidas_ts~trend + season,data=Medidas_ts)
 summary(model_tslm)
@@ -172,7 +174,7 @@ Medidas_1_NEW$tslm=forecast(model_tslm,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 13. Bloque de presentación de resultados #####
+##### PRESENTACION RESULTADOS #####
 
 YMAX=max(Medidas_1_NEW[,-1])
 YMIN=min(Medidas_1_NEW[,-1])
@@ -186,3 +188,7 @@ lines(c(Medidas_1_NEW$tslm),col="cyan")
 Medidas_1_NEW
 
 ## -------------------------------------------------------------------------
+
+# A la vista de los resultado mis modelos de predicción de demandas son altamente mejorables. 
+# Con estos resultados vemos que el que mejor funciona es el modelo ARIMA a pesar que también es muy mejorable. 
+# Pero con el tiempo de que he dispuesto es el resultado al que he llegado.
