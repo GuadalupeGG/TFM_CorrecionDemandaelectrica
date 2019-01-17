@@ -42,11 +42,17 @@ Por este motivo y para intentar solucionar estos problemas utilizo solo las curv
 
 Este notebook tiene algunos graficos donde podemos ver las relaciones entre variables, y algunas maneras graficas de ver la información de la que dispongo.
 
+### Prediccion Forecast.ipynb
+
+En este notebook trato las curvas reales de cuatro clientes que tienen unos grandes desvíos y para los que no somos capaces de realizar una previsión de consumo que reduzca estos desvíos.
+
 ### Modelo/Forecast de Demanda_prueba real.R
 
 En este notebook de R intento utilizar las herramientas de que dispongo para predecir la demanda electrica de las proximas 24 horas utilizando varios modelos para ver cual se adapta mejor a la realidad.
 
 En este caso, he seguido simplificando, y utilizado las curvas de consumo de cuatro clientes con los que tenemos problemas para predecir la demanda electrica. Son cuatro clientes que en mi trabajo me están generando mucho desvío, sigo intentando solucionar un problema real que tras este TFM pueda implementar en mi trabajo.
+
+La idea si consigo que este modelo funciones, es tener una manera de predecir consumos extrapolable a cualquier punto o grupo de puntos de suministro electrico.
 
 # Detalle datos
 
