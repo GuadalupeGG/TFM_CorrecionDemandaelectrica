@@ -60,10 +60,10 @@ Codigo universal de punto de suministro. Este es el codigo unico e invariable qu
 
 En el caso que nos aplica nos vamos centrar unicamente en las tarifas electricas de baja tensión, que son:
 
-# 2.0A: Potencia contratada inferior o igual a 10KWh
-# 2.1A: Potencia contratada entre 10KWh y 15KWh
-# 2.0DHA: Potencia contratada inferior o igual a 10KWh
-# 2.1DHA: Potencia contratada entre 10KWh y 15KWh
+ 2.0A: Potencia contratada inferior o igual a 10KWh
+ 2.1A: Potencia contratada entre 10KWh y 15KWh
+ 2.0DHA: Potencia contratada inferior o igual a 10KWh
+ 2.1DHA: Potencia contratada entre 10KWh y 15KWh
 
 En lo que a perfiles de consumo se refiere las tarifas 2.0A y 2.1A son similares, y la tarifa 2.0DHA y la tarifa 2.1DHA también. Las tarifas 2.0A y 2.1A se caracterizan por no tener discriminación horaria.
 
