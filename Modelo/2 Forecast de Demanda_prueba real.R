@@ -8,11 +8,16 @@ if (!require("forecast")){
   library(forecast)
 }
 
+if (!require("lubridate")){
+  install.packages("lubridate") 
+  library(lubridate)
+}
+
 ## -------------------------------------------------------------------------
 
 ##### Establecemos directorio de trabajo #####
 
-setwd("~/TFM/TFM_CorrecionDemandaelectric")
+# setwd("/TFM_CorrecionDemandaelectric")
 
 ## -------------------------------------------------------------------------
 
@@ -20,7 +25,7 @@ setwd("~/TFM/TFM_CorrecionDemandaelectric")
 
 # Cargo el data frame resultado del notebook de python
 
-Medidas=read.csv2("./df_group_sum.csv",stringsAsFactors = FALSE, sep = ',')
+Medidas=read.csv2("./Modelo/Bridgestone.csv",stringsAsFactors = FALSE, sep = ',')
 
 ## -------------------------------------------------------------------------
 
@@ -37,15 +42,15 @@ tail(Medidas)
 ##### Formateamos las variables #####
 
 
-Medidas$Zona=as.factor(Medidas$Zona)
-Medidas$Tarifa=as.factor(Medidas$Tarifa)
+Medidas$Cups=as.factor(Medidas$Cups)
+
 
 Medidas$Active=as.numeric(Medidas$Active)
 
 # para asegurarnos que las fechas tienen un formato correcto
 lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "Spanish_Spain.1252") 
 
-Medidas$Fecha=as.Date(Medidas$Fecha)
+Medidas$datetime=ymd_hms(Medidas$datetime)
 
 # para poner todas las fechas en el mismo formato
 
@@ -61,99 +66,129 @@ summary(Medidas)
 
 ##### Seleccionamos los datos a pasar a los modelos #####
 
-Medidas_Centro=Medidas[Medidas$Zona=="Centro" & Medidas$Tarifa=='2A',]
+#Aunque el fichero trae medida de cuatro puntos, vamos realizar el estudio del punto 3.
+
+Medidas_1=Medidas[Medidas$Cups=="Cups_3",]
 
 # Revisamos los datos de este filtro de datos
 
-str(Medidas_Centro)
-head(Medidas_Centro)
-summary(Medidas_Centro)
+str(Medidas_1)
+head(Medidas_1)
+summary(Medidas_1)
 
-Medidas_Centro=Medidas_Centro[order(Medidas_Centro$Fecha),]
-plot(Medidas_Centro$Active, type="l")
-plot(Medidas_Centro$Fecha,Medidas_Centro$Active, type="l")
-
+Medidas_1=Medidas_1[order(Medidas_1$datetime),]
+plot(Medidas_1$Active, type="l")
+plot(Medidas_1$datetime,Medidas_1$Active, type="l")
 
 ## -------------------------------------------------------------------------
 
 ##### Seleccionamos las fechas para el analisis y el periodo #####
 
-FECHA_ANALISIS=as.Date("2018-07-31")
+FECHA_ANALISIS=as.Date("2018-11-15")
 PERIODO_PREVIO=140
-PERIODO_PRUEBA=31
+PERIODO_PRUEBA=7
 
 
-Medidas_Centro_HIS=Medidas_Centro[Medidas_Centro$Fecha<=FECHA_ANALISIS & Medidas_Centro$Fecha>FECHA_ANALISIS-PERIODO_PREVIO,]
-Medidas_Centro_NEW=Medidas_Centro[Medidas_Centro$Fecha<=FECHA_ANALISIS + PERIODO_PRUEBA & Medidas_Centro$Fecha>FECHA_ANALISIS,c("Fecha","Active")]
+Medidas_1_HIS=Medidas_1[Medidas_1$datetime<=FECHA_ANALISIS & Medidas_1$datetime>FECHA_ANALISIS-PERIODO_PREVIO,]
+Medidas_1_NEW=Medidas_1[Medidas_1$datetime<=FECHA_ANALISIS + PERIODO_PRUEBA & Medidas_1$datetime>FECHA_ANALISIS,c("datetime","Active")]
 
-plot(Medidas_Centro_HIS$Fecha,Medidas_Centro_HIS$Active, type="l")
-plot(Medidas_Centro_NEW$Fecha,Medidas_Centro_NEW$Active, type="l")
+plot(Medidas_1_HIS$datetime,Medidas_1_HIS$Active, type="l")
+plot(Medidas_1_NEW$datetime,Medidas_1_NEW$Active, type="l")
 
 ## -------------------------------------------------------------------------
 
-##### 8. Bloque de formateo de serie #####
+##### Formateo de Serie Temporal #####
 
-Centro = ts(Medidas_Centro_HIS$Active,start=c(2018,01,01), end = c(2018,12,31),frequency=7) # frequency, porque el patron de estacionalidad son días, 7 días de la semana
+# le damos un patron de estacionalidad de 365 días
+Centro = ts(Medidas_1_HIS$Active,start=c(2017,07,01), frequency=365) 
+
+# Vemos un resumen completo de la serie temporal donde el grafico ACF es la autocorrealción y el grafico PACF es el grafico de autocorrelación parcial
+tsdisplay(Centro)
+
+# Vamos a descomponer esta serie temporal en los tres componentes principales: estacionalidad + tendencia + ruido
+
+des.oro<-stl(Centro,s.window = "periodic" )
+plot(des.oro, main="Descomposición de la demanda electrica")
+plot(decompose(Centro))
+
+
 plot(Centro)
 print(Centro)
 
-Medidas_ts = ts(Medidas$Active, start = c(2018,01,01), end = c(2018,12,31), frequency = 7)
+Medidas_ts = ts(Medidas_1_HIS$Active, start = c(2017,07,01),  frequency = 365)
+
 ## -------------------------------------------------------------------------
 
-##### 9. Bloque de modelo Arima #####
+##### MODELO ARIMA #####
 
-model_arima=auto.arima(Centro,seasonal=TRUE,trace=TRUE) # el prueba todos los que hay y elige en mejor.
+#(o modelos de media movil integrada autoregresiva)
+# El modelo Auto Arima prueba todas las opciones que hay y elige en mejor.
+
+help(auto.arima)
+
+model_arima=auto.arima(Centro,seasonal=TRUE,trace=TRUE,stepwise=FALSE) 
 plot(forecast(model_arima,h=24)) # muestrame los 24 siguientes datos
+
+# Calculamos los residuos de nuestro modelo
+checkresiduals(model_arima)
 summary(model_arima)
+
+# Pintamos el pronostico para un año
+model_arima %>% forecast(h = 24) %>% autoplot()
 forecast(model_arima,h=24)
-Centro$Arima=forecast(model_arima,h=PERIODO_PRUEBA)$mean
+
+Medidas_1_NEW$Arima=forecast(model_arima,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 10. Bloque de modelo Media Movil #####
+##### MEDIDA MOVIL #####
 
 model_ma=ma(Medidas_ts,order=3)
 summary(model_ma)
 plot(forecast(model_ma, fan=TRUE,h=24))
 forecast(model_ma, level=c(80,95),h=24)
 
-Medidas_Centro_NEW$MA=forecast(model_ma,h=PERIODO_PRUEBA)$mean
+Medidas_1_NEW$MA=forecast(model_ma,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 11. Bloque de modelo Holt-Winters #####
+##### HOLT-WINTERS #####
 
 model_hw=HoltWinters(Medidas_ts)
 summary(model_hw)
 plot(forecast(model_hw, fan=TRUE,h=24))
 forecast(model_hw,level=c(80,95),h=24)
 
-Medidas_Centro_NEW$HW=forecast(model_hw,h=PERIODO_PRUEBA)$mean
+Medidas_1_NEW$HW=forecast(model_hw,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 12. Bloque de modelo lineal #####
+##### MODELO LINEAL #####
 
 model_tslm=tslm(Medidas_ts~trend + season,data=Medidas_ts)
 summary(model_tslm)
 plot(forecast(model_tslm, fan=TRUE,h=24))
 forecast(model_tslm,level=c(80,95),h=24)
 
-Medidas_Centro_NEW$tslm=forecast(model_tslm,h=PERIODO_PRUEBA)$mean
+Medidas_1_NEW$tslm=forecast(model_tslm,h=PERIODO_PRUEBA)$mean
 
 ## -------------------------------------------------------------------------
 
-##### 13. Bloque de presentación de resultados #####
+##### PRESENTACION RESULTADOS #####
 
-YMAX=max(Medidas_Centro_NEW[,-1])
-YMIN=min(Medidas_Centro_NEW[,-1])
+YMAX=max(Medidas_1_NEW[,-1])
+YMIN=min(Medidas_1_NEW[,-1])
 
-plot(Medidas_Centro_NEW$Active,type="l", ylim=c(YMIN,YMAX),lwd=2)
-lines(c(Medidas_Centro_NEW$Arima),col="blue")
-lines(c(Medidas_Centro_NEW$MA),col="red") # las ventas de hoy son la media de los tres ultimos dias. Tiene sentido sin estacionalidad, pero no con ella.
-lines(c(Medidas_Centro_NEW$HW),col="green")
-lines(c(Medidas_Centro_NEW$tslm),col="cyan")
+plot(Medidas_1_NEW$Active,type="l", ylim=c(YMIN,YMAX),lwd=2)
+lines(c(Medidas_1_NEW$Arima),col="blue")
+lines(c(Medidas_1_NEW$MA),col="red") # las ventas de hoy son la media de los tres ultimos dias. Tiene sentido sin estacionalidad, pero no con ella.
+lines(c(Medidas_1_NEW$HW),col="green")
+lines(c(Medidas_1_NEW$tslm),col="cyan")
 
-Medidas_Centro_NEW
+Medidas_1_NEW
 
 ## -------------------------------------------------------------------------
+
+# A la vista de los resultado mis modelos de predicción de demandas son altamente mejorables. 
+# Con estos resultados vemos que el que mejor funciona es el modelo ARIMA a pesar que también es muy mejorable. 
+# Pero con el tiempo de que he dispuesto es el resultado al que he llegado.
